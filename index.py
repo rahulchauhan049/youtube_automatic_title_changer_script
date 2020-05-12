@@ -6,6 +6,8 @@ import datetime
 import requests 
 import time
 from datetime import timedelta  
+from datetime import datetime
+import calendar
 
 
 
@@ -32,7 +34,7 @@ key = open("api_key.txt", "r")
 # defining a params dict for the parameters to be sent to the API 
 PARAMS = {
     'part':'statistics',
-    'id':'Lw62SRyLHe8',
+    'id':'6o5oMFESgtQ',
     'key':key.read()
 } 
 
@@ -41,7 +43,14 @@ commentCount = 0
 likeCount = 0
 
 while True:
-    now = datetime.datetime.today() +  timedelta(minutes=330) 
+    my_date = datetime.now() +  timedelta(minutes=330) 
+    date = my_date.day
+    year = my_date.year
+    weekday = calendar.day_name[my_date.weekday()]
+    month = calendar.month_name[my_date.month]
+
+    ctime = str(weekday) + " " + str(month) + " " + str(date) + " " + str(year)
+
     try:
       r = requests.get(url = URL, params = PARAMS) 
     except requests.exceptions.HTTPError as errh:
@@ -54,17 +63,25 @@ while True:
       print ("OOps: Something Else",err)
     data = r.json() 
 
+    print(data)
+
     if('items' in list(data.keys())):
+      if viewCount == data['items'][0]['statistics']["viewCount"] and likeCount == data['items'][0]['statistics']["likeCount"] and commentCount == data['items'][0]['statistics']["commentCount"]:
+        time.sleep(30)
+        continue
       viewCount = data['items'][0]['statistics']["viewCount"]
       likeCount = data['items'][0]['statistics']["likeCount"]
       commentCount = data['items'][0]['statistics']["commentCount"]
+    else:
+      time.sleep(45)
+      continue
 
-    title = "On " +  str(now.ctime()) +" IST, This Video has "+ str(viewCount)+ " Views, "+ str(commentCount)+" Comments and " + str(likeCount)+ " Likes"
+    title = "On " + ctime +" IST, This Video has "+ str(viewCount)+ " Views, "+ str(commentCount)+" Comments and " + str(likeCount)+ " Likes"
 
     request = youtube.videos().update(
         part="snippet,status,localizations",
         body={
-          "id": "Lw62SRyLHe8",
+          "id": "6o5oMFESgtQ",
           "snippet": {
             "categoryId": 28,
             "defaultLanguage": "en",
@@ -79,5 +96,5 @@ while True:
     response = request.execute()
 
     print(response)
-    time.sleep(300)
+    time.sleep(60)
 
